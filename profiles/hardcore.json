@@ -1,0 +1,15 @@
+{
+  "id": "hardcore",
+  "name": "HARDCORE",
+  "description": "Aggressive — all ports, full template set, maximum coverage",
+  "color": "red",
+  "flags": {
+    "nmap": "-sV -sC -A -T5 -p-",
+    "nuclei": "-rate-limit 500 -timeout 30",
+    "ffuf": "-rate 500 -recursion -recursion-depth 2",
+    "masscan": "--rate=25000 --wait=2",
+    "sqlmap": "--level=5 --risk=3 --batch --tamper=space2comment",
+    "hydra": "-w 1 -t 16"
+  },
+  "modules": ["masscan", "nmap", "nikto", "nuclei", "headers", "ssl", "ffuf", "amass", "subfinder", "wapiti", "whatweb", "sqlmap"]
+}
