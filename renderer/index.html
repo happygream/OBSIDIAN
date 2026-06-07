@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0BS1D14N</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="scanlines"></div>
+
+<!-- INTRO -->
+<div id="intro">
+  <canvas id="rain"></canvas>
+  <div class="corner c-tl"></div><div class="corner c-tr"></div>
+  <div class="corner c-bl"></div><div class="corner c-br"></div>
+  <div class="intro-btns">
+    <button class="ibt" id="muteBtn" onclick="toggleMute()">&#9654; MUTE</button>
+  </div>
+  <div class="intro-inner">
+    <div class="intro-by">presented by <span>OBSIDIAN</span></div>
+    <div class="intro-logo">0BS1D14N</div>
+    <div class="intro-tag">Open Source Security Scanner</div>
+  </div>
+  <button class="ibt skip" onclick="skipIntro()">SKIP &rsaquo;</button>
+  <div class="intro-prog"><div class="intro-prog-fill" id="iBar"></div></div>
+  <audio id="bgAudio" loop></audio>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="tl-logo">0BS1D14N<span>v0.2.0</span></div>
+    <div class="tl-center">
+      <button class="tl-tab active" onclick="setTab(this,'scan')">Scanner</button>
+      <button class="tl-tab" onclick="setTab(this,'tools')">Tools</button>
+      <button class="tl-tab" onclick="setTab(this,'script')">Script</button>
+      <button class="tl-tab" onclick="setTab(this,'history')">History</button>
+      <button class="tl-tab" onclick="setTab(this,'report')">Report</button>
+    </div>
+    <div class="tl-right">
+      <div class="status-pill"><div class="sdot" id="sdot"></div><span id="stext">READY</span></div>
+      <span id="updatePill" style="font-family:var(--ft);font-size:9px;color:var(--dim);letter-spacing:1px;display:none;cursor:pointer;" onclick="window.obsidian.checkUpdate()" title="Check for updates"></span>
+      <button class="ib2" title="Audio" onclick="toggleMuteApp()">&#9654;</button>
+      <button class="ib2" title="Proxy Manager" onclick="openProxy()">&#9651;</button>
+      <div class="win-controls">
+        <button class="wc-btn" onclick="winMin()" title="Minimise">&#9472;</button>
+        <button class="wc-btn" onclick="winMax()" title="Maximise" id="winMaxBtn">&#9723;</button>
+        <button class="wc-btn wc-close" onclick="winClose()" title="Close">&#10005;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scanner tab -->
+  <div class="app-body" id="pgScan">
+    <div class="sidebar">
+      <div>
+        <div class="sec-lbl">Target</div>
+        <input class="cyber-inp" id="targetInp" type="text" placeholder="https://target.com or 192.168.1.1 or 10.0.0.0/24" spellcheck="false" autocomplete="off"/>
+      </div>
+      <div>
+        <div class="sec-lbl">Scan Profile</div>
+        <div class="prof-grid">
+          <div class="prof-card pf active" onclick="setProfile(this,'fast')"><div class="prof-name">FAST</div><div class="prof-desc">Quick — nmap, headers, ffuf. Under 5 min</div></div>
+          <div class="prof-card ps" onclick="setProfile(this,'stealth')"><div class="prof-name">STEALTH</div><div class="prof-desc">Slow, passive — avoids IDS/WAF</div></div>
+          <div class="prof-card" onclick="setProfile(this,'standard')"><div class="prof-name">STANDARD</div><div class="prof-desc">Balanced speed and coverage</div></div>
+          <div class="prof-card ph" onclick="setProfile(this,'hardcore')"><div class="prof-name">HARDCORE</div><div class="prof-desc">Aggressive — all ports, full CVEs</div></div>
+          <div class="prof-card pa" onclick="setProfile(this,'auth')"><div class="prof-name">AUTH TEST</div><div class="prof-desc">Login, lockout, wordlists</div></div>
+        </div>
+      </div>
+      <div id="authBlock">
+        <div class="auth-sep"></div>
+        <div class="sec-lbl">Auth Config</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div><span class="inp-lbl">Login Endpoint</span><input class="cyber-inp" id="authEp" value="/login" spellcheck="false" autocomplete="off"/></div>
+          <div class="row2">
+            <div><span class="inp-lbl">User Param</span><input class="cyber-inp" id="authUP" value="username" spellcheck="false"/></div>
+            <div><span class="inp-lbl">Pass Param</span><input class="cyber-inp" id="authPP" value="password" spellcheck="false"/></div>
+          </div>
+          <div><span class="inp-lbl">Failure String</span><input class="cyber-inp" id="authFS" value="Invalid credentials" spellcheck="false"/></div>
+          <div>
+            <span class="inp-lbl">Username Wordlist</span>
+            <div class="wl-row"><div class="wl-inp"><input class="cyber-inp" id="ulPath" placeholder="/path/to/users.txt" style="font-size:11px" spellcheck="false" autocomplete="off"/></div>
+            <button class="browse-btn" onclick="browseFile('ulPath','ulCount')">BROWSE</button></div>
+            <div class="wl-count" id="ulCount"></div>
+          </div>
+          <div>
+            <span class="inp-lbl">Password Wordlist</span>
+            <div class="wl-row"><div class="wl-inp"><input class="cyber-inp" id="plPath" placeholder="/path/to/rockyou.txt" style="font-size:11px" spellcheck="false" autocomplete="off"/></div>
+            <button class="browse-btn" onclick="browseFile('plPath','plCount')">BROWSE</button></div>
+            <div class="wl-count" id="plCount"></div>
+          </div>
+          <div>
+            <span class="inp-lbl">Attack Mode</span>
+            <div class="am-list">
+              <div class="am-btn active" data-m="spray" onclick="setAttackMode(this)"><div class="am-name" style="color:var(--yellow)">PASSWORD SPRAY</div><div class="am-desc">1 password vs many users — avoids lockout</div></div>
+              <div class="am-btn" data-m="stuffing" onclick="setAttackMode(this)"><div class="am-name" style="color:var(--cyan)">CREDENTIAL STUFFING</div><div class="am-desc">Paired user:pass — breached credentials</div></div>
+              <div class="am-btn" data-m="brute" onclick="setAttackMode(this)"><div class="am-name" style="color:var(--red)">FULL BRUTE FORCE</div><div class="am-desc">Every user vs every password in list</div></div>
+            </div>
+          </div>
+          <div class="row2">
+            <div><span class="inp-lbl">Threads</span><input class="cyber-inp" id="authThr" type="number" value="4" min="1" max="64"/></div>
+            <div><span class="inp-lbl">Delay (ms)</span><input class="cyber-inp" id="authDly" type="number" value="500" min="0"/></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-lbl">Scope</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="wl-row">
+            <div class="wl-inp"><input class="cyber-inp" id="scopeFile" placeholder="scope.txt (one target per line)" style="font-size:11px" spellcheck="false" autocomplete="off" readonly/></div>
+            <button class="browse-btn" onclick="browseScope()">BROWSE</button>
+          </div>
+          <div class="wl-count" id="scopeCount"></div>
+          <div id="scopeTargets" style="display:none;max-height:80px;overflow-y:auto;border:1px solid var(--border);border-radius:2px;padding:6px 8px;"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-lbl">Modules</div>
+        <div class="mod-list" id="modList"></div>
+      </div>
+    </div>
+
+    <div class="main-area">
+      <div class="tgt-bar">
+        <div class="tgt-display"><span class="tgt-arrow">&#9658;</span><span class="tgt-text" id="tgtDisplay">No target set</span></div>
+        <button class="proxy-btn" onclick="openProxy()">&#9651; PROXIES (<span id="proxyCnt">0</span>)</button>
+        <button class="launch-btn" id="launchBtn" onclick="startScan()">LAUNCH SCAN</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopScan()">STOP</button>
+      </div>
+
+      <div class="content-grid">
+        <div class="cpanel" style="grid-column:1;grid-row:1">
+          <div class="term-hdr">
+            <div class="t-dots"><div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div></div>
+            <span class="term-lbl">obsidian — live output</span>
+            <span style="font-family:var(--ft);font-size:10px;color:var(--dim)" id="timerEl"></span>
+          </div>
+          <div class="term-body" id="terminal">
+            <div class="t-idle">// Configure target and launch scan<br>// Connecting to backend...</div>
+          </div>
+        </div>
+
+        <div class="cpanel" style="grid-column:2;grid-row:1">
+          <div class="stats-area">
+            <div>
+              <div class="panel-lbl">Risk Score</div>
+              <div class="risk-big">
+                <div class="risk-num" id="riskNum">--</div>
+                <div class="risk-lbl" id="riskLbl">NOT SCANNED</div>
+                <div class="risk-track"><div class="risk-fill" id="riskFill"></div></div>
+              </div>
+            </div>
+            <div>
+              <div class="panel-lbl">Severity</div>
+              <div class="sev-rows">
+                <div class="sev-row cr"><span class="sev-n">CRITICAL</span><span class="sev-v" id="sc-CRITICAL">0</span></div>
+                <div class="sev-row hi"><span class="sev-n">HIGH</span><span class="sev-v" id="sc-HIGH">0</span></div>
+                <div class="sev-row me"><span class="sev-n">MEDIUM</span><span class="sev-v" id="sc-MEDIUM">0</span></div>
+                <div class="sev-row lo"><span class="sev-n">LOW</span><span class="sev-v" id="sc-LOW">0</span></div>
+                <div class="sev-row in"><span class="sev-n">INFO</span><span class="sev-v" id="sc-INFO">0</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="panel-lbl">Module Progress</div>
+              <div class="prog-list" id="progList"><div style="color:var(--dim);font-family:var(--ft);font-size:10px">—</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cpanel findings-board" style="grid-column:1;grid-row:2">
+          <div class="term-hdr">
+            <span class="term-lbl">threat board</span>
+            <span style="font-family:var(--ft);font-size:10px;color:var(--dim)" id="fCount">0 findings</span>
+          </div>
+          <div class="findings-scroll" id="findingsScroll">
+            <div class="f-idle">// Findings appear here during scan</div>
+          </div>
+        </div>
+
+        <div class="cpanel export-panel" style="grid-column:2;grid-row:2">
+          <div class="panel-lbl">Export</div>
+          <button class="exp-btn" id="ePDF"  disabled onclick="exportPDF()"><span class="exp-icon">&#9646;</span>PDF Report</button>
+          <button class="exp-btn" id="eMD"   disabled onclick="exportMD()"><span class="exp-icon">#</span>README.md</button>
+          <button class="exp-btn" id="eHTML" disabled onclick="exportHTML()"><span class="exp-icon">&lt;/&gt;</span>HTML Report</button>
+          <button class="exp-btn" id="eSH"   disabled onclick="requestAndDownloadScript()"><span class="exp-icon">$_</span>Shell Script</button>
+        </div>
+      </div>
+
+      <div class="complete-banner" id="completeBanner">&#9632; SCAN COMPLETE — REVIEW FINDINGS AND EXPORT REPORT &#9632;</div>
+    </div>
+  </div>
+
+  <!-- Tools tab -->
+  <div id="pgTools" style="display:none;flex:1;overflow:hidden">
+    <div style="display:flex;flex-direction:column;height:100%;">
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,0.3);">
+        <button class="tool-stab active" onclick="setToolTab(this,'status')" id="stab-status">STATUS</button>
+        <button class="tool-stab" onclick="setToolTab(this,'msf')" id="stab-msf">METASPLOIT</button>
+        <button class="tool-stab" onclick="setToolTab(this,'burp')" id="stab-burp">BURP SUITE</button>
+        <button class="tool-stab" onclick="setToolTab(this,'cve')" id="stab-cve">CVE LOOKUP</button>
+      </div>
+
+      <!-- Status sub-tab -->
+      <div id="ttab-status" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="page-title">TOOL STATUS</div>
+            <div class="page-sub" style="margin:0">Click INSTALL on any missing tool to auto-install it.</div>
+          </div>
+          <button class="action-btn" onclick="checkTools()">REFRESH</button>
+        </div>
+        <div id="toolGrid">
+          <div style="color:#c090c0;font-family:var(--ft);font-size:11px;">Checking tools...</div>
+        </div>
+      </div>
+
+      <!-- Metasploit sub-tab -->
+      <div id="ttab-msf" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+          <div style="flex:1;">
+            <div class="page-title" style="font-size:12px;">METASPLOIT CONSOLE</div>
+            <div class="page-sub" style="margin:0;font-size:10px;">Interactive msfconsole — stream commands and output in real time.</div>
+          </div>
+          <button class="action-btn primary" onclick="launchMsf()" id="msfLaunchBtn">LAUNCH</button>
+          <button class="action-btn" onclick="stopMsf()" id="msfStopBtn" style="border-color:var(--red);color:var(--red);display:none;">STOP</button>
+        </div>
+        <div id="msfTerminal" style="flex:1;overflow-y:auto;padding:12px 16px;font-family:var(--ft);font-size:11px;line-height:1.75;background:rgba(0,0,0,0.3);">
+          <div style="color:var(--dim);">// Click LAUNCH to start msfconsole</div>
+        </div>
+        <div style="display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,0.4);">
+          <span style="font-family:var(--ft);font-size:12px;color:var(--pink);line-height:32px;">msf6 &gt;</span>
+          <input id="msfInput" class="cyber-inp" placeholder="Enter command..." spellcheck="false" autocomplete="off"
+            onkeydown="if(event.key==='Enter'){sendMsfCmd();}" style="flex:1;padding:7px 12px;"/>
+          <button class="action-btn" onclick="sendMsfCmd()" style="padding:7px 14px;">SEND</button>
+        </div>
+      </div>
+
+      <!-- Burp Suite sub-tab -->
+      <div id="ttab-burp" style="flex:1;display:none;flex-direction:column;overflow-y:auto;">
+        <div class="page-inner">
+          <div class="page-title">BURP SUITE</div>
+          <div class="page-sub">Launch Burp Suite from OBSIDIAN and configure it to intercept scan traffic.</div>
+          <div style="display:flex;flex-direction:column;gap:14px;max-width:500px;">
+            <div style="background:rgba(255,0,200,0.03);border:1px solid rgba(255,0,200,0.15);border-radius:3px;padding:16px;">
+              <div style="font-family:var(--ft);font-size:10px;color:var(--pink);letter-spacing:2px;margin-bottom:10px;">LAUNCH</div>
+              <div style="font-family:var(--ft);font-size:11px;color:#c090c0;line-height:1.8;margin-bottom:14px;">
+                Attempts to detect Burp Suite in common install locations and launch it.<br>
+                On Windows, launch Burp Suite manually.
+              </div>
+              <button class="action-btn primary" onclick="launchBurp()">LAUNCH BURP SUITE</button>
+              <div id="burpResult" style="font-family:var(--ft);font-size:11px;color:var(--cyan);margin-top:10px;min-height:16px;"></div>
+            </div>
+            <div style="background:rgba(0,255,242,0.03);border:1px solid rgba(0,255,242,0.12);border-radius:3px;padding:16px;">
+              <div style="font-family:var(--ft);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;">PROXY SETUP</div>
+              <div style="font-family:var(--ft);font-size:11px;color:#c090c0;line-height:2;">
+                To route OBSIDIAN scan traffic through Burp:<br>
+                1. Set Burp proxy listener to <span style="color:var(--cyan);">127.0.0.1:8080</span><br>
+                2. Add a proxy in OBSIDIAN&#39;s Proxy Manager:<br>
+                &nbsp;&nbsp;&nbsp;<span style="color:var(--pink);">HTTP / 127.0.0.1 / 8080</span><br>
+                3. Launch scan — all HTTP traffic routes through Burp
+              </div>
+            </div>
+            <div style="background:rgba(255,230,0,0.02);border:1px solid rgba(255,230,0,0.12);border-radius:3px;padding:16px;">
+              <div style="font-family:var(--ft);font-size:10px;color:var(--yellow);letter-spacing:2px;margin-bottom:10px;">CERTIFICATE</div>
+              <div style="font-family:var(--ft);font-size:11px;color:#c090c0;line-height:2;">
+                For HTTPS interception, install the Burp CA cert:<br>
+                1. Navigate to <span style="color:var(--cyan);">http://burpsuite</span> in a browser<br>
+                2. Download the CA certificate<br>
+                3. Install it as a trusted root authority<br>
+                4. Enable SSL passthrough for tools that pin certificates
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CVE Lookup sub-tab -->
+      <div id="ttab-cve" style="flex:1;display:none;flex-direction:column;overflow-y:auto;">
+        <div class="page-inner">
+          <div class="page-title">CVE LOOKUP</div>
+          <div class="page-sub">Look up CVEs from scan findings or manually. Fetches CVSS score, description, and remediation from NVD.</div>
+          <div style="display:flex;gap:8px;max-width:500px;margin-bottom:16px;">
+            <input id="cveInput" class="cyber-inp" placeholder="CVE-2024-1234 or search term" spellcheck="false" autocomplete="off"
+              onkeydown="if(event.key==='Enter'){lookupCVE();}" style="flex:1;"/>
+            <button class="action-btn primary" onclick="lookupCVE()" style="white-space:nowrap;">LOOK UP</button>
+          </div>
+          <!-- Auto-populated from findings -->
+          <div id="cveFindingsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>
+          <!-- Result -->
+          <div id="cveResult" style="max-width:640px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Script tab -->
+  <div id="pgScript" style="display:none;flex:1;overflow:hidden">
+    <div class="page-inner">
+      <div class="page-title">SHELL SCRIPT</div>
+      <div class="page-sub">Auto-generated from your current configuration. Drop this on any Linux/macOS host to run the scan without the GUI. Includes auto-install, proxychains config, and all selected modules.</div>
+      <pre id="scriptContent" style="background:#050608;border:1px solid var(--border);border-radius:4px;padding:16px;font-family:var(--ft);font-size:11px;color:var(--text);white-space:pre-wrap;line-height:1.7;overflow-y:auto;max-height:480px">// Click Generate or complete a scan to preview the script</pre>
+      <div style="display:flex;gap:10px">
+        <button class="action-btn primary" onclick="requestScript()">GENERATE</button>
+        <button class="action-btn" id="dlScriptBtn" disabled onclick="downloadScript()">DOWNLOAD .SH</button>
+      </div>
+    </div>
+  </div>
+  <!-- History tab -->
+  <div id="pgHistory" style="display:none;flex:1;overflow:hidden">
+    <div class="page-inner">
+      <div class="page-title">SCAN HISTORY</div>
+      <div class="page-sub">Past scans saved locally. Click any entry to load findings into the report builder.</div>
+      <div id="historyList" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="color:#c090c0;font-family:var(--ft);font-size:11px;">No scan history yet.</div>
+      </div>
+      <button class="action-btn" onclick="clearHistory()" style="margin-top:8px;border-color:var(--red);color:var(--red);">CLEAR HISTORY</button>
+    </div>
+  </div>
+
+  <!-- Report tab -->
+  <div id="pgReport" style="display:none;flex:1;overflow:hidden">
+    <div class="page-inner">
+      <div class="page-title">REPORT BUILDER</div>
+      <div class="page-sub">Configure and export a full professional pentest report.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:600px;">
+        <div>
+          <span class="inp-lbl">Engagement Title</span>
+          <input class="cyber-inp" id="rpt-title" placeholder="Web Application Penetration Test" spellcheck="false"/>
+        </div>
+        <div>
+          <span class="inp-lbl">Client / Organisation</span>
+          <input class="cyber-inp" id="rpt-client" placeholder="ACME Corp" spellcheck="false"/>
+        </div>
+        <div>
+          <span class="inp-lbl">Assessor</span>
+          <input class="cyber-inp" id="rpt-assessor" placeholder="Your name" spellcheck="false"/>
+        </div>
+        <div>
+          <span class="inp-lbl">Classification</span>
+          <input class="cyber-inp" id="rpt-classification" value="CONFIDENTIAL" spellcheck="false"/>
+        </div>
+        <div>
+          <span class="inp-lbl">Executive Summary</span>
+          <textarea class="cyber-inp" id="rpt-summary" rows="4" placeholder="Brief overview of scope, methodology, and key findings for non-technical stakeholders..." style="resize:vertical;line-height:1.7;font-size:11px;"></textarea>
+        </div>
+        <div>
+          <span class="inp-lbl">Scope</span>
+          <textarea class="cyber-inp" id="rpt-scope" rows="2" placeholder="https://target.com — web application, external network" style="resize:vertical;line-height:1.7;font-size:11px;"></textarea>
+        </div>
+        <div>
+          <span class="inp-lbl">Methodology</span>
+          <textarea class="cyber-inp" id="rpt-methodology" rows="3" placeholder="OWASP Testing Guide v4, manual verification of all automated findings..." style="resize:vertical;line-height:1.7;font-size:11px;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;padding:10px 0;">
+          <input type="checkbox" id="rpt-excludeFP" style="accent-color:var(--pink);" checked/>
+          <label for="rpt-excludeFP" style="font-family:var(--ft);font-size:11px;color:#c090c0;cursor:pointer;">Exclude false positives from report</label>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="action-btn primary" onclick="exportFullReport('html')">EXPORT HTML REPORT</button>
+          <button class="action-btn" onclick="exportFullReport('pdf')">EXPORT PDF</button>
+          <button class="action-btn" onclick="exportFullReport('md')">EXPORT MARKDOWN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Proxy drawer -->
+<div id="overlay" onclick="closeProxy()"></div>
+<div id="proxyDrawer">
+  <div class="drawer-hdr">
+    <span class="drawer-title">PROXY MANAGER</span>
+    <button class="ib2" onclick="closeProxy()">&#10005;</button>
+  </div>
+  <div class="drawer-body">
+    <div>
+      <span class="inp-lbl" style="display:block;margin-bottom:8px">Rotation Mode</span>
+      <div class="rot-btns">
+        <button class="rot-btn active" onclick="setRot(this,'round-robin')">Round Robin</button>
+        <button class="rot-btn" onclick="setRot(this,'random')">Random</button>
+        <button class="rot-btn" onclick="setRot(this,'single')">Single</button>
+      </div>
+    </div>
+    <div>
+      <span class="inp-lbl" style="display:block;margin-bottom:8px">Proxy List</span>
+      <div id="proxyList"></div>
+      <button class="add-proxy-btn" style="margin-top:8px" onclick="addProxy()">+ ADD PROXY</button>
+    </div>
+    <button class="test-all-btn" onclick="testAllProxies()">TEST ALL PROXIES</button>
+    <div class="proxy-note">Configured proxies are injected into all tool commands via proxychains4. The shell script export auto-generates proxychains.conf from this list.</div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<!-- Windows modal -->
+<div id="winModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:#0d0a10;border:1px solid rgba(255,0,200,0.3);border-radius:4px;padding:36px 40px;max-width:480px;width:90%;position:relative;box-shadow:0 0 60px rgba(255,0,200,0.12);">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ff00c8,transparent);"></div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:4px;color:#ff00c8;margin-bottom:16px;">WINDOWS DETECTED</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#e8d0e8;line-height:2;margin-bottom:20px;">
+      WSL was not detected on this machine.<br>
+      The scan tools (nmap, nuclei, nikto etc.) require Linux.<br><br>
+      <span style="color:#00fff2;">Fix in 2 steps:</span><br>
+      1. Open PowerShell as Administrator and run:<br>
+      &nbsp;&nbsp;&nbsp;<span style="color:#ff00c8;">wsl --install</span><br>
+      2. Restart your machine, then re-open OBSIDIAN.<br><br>
+      OBSIDIAN will automatically detect WSL and route all<br>
+      scan traffic through it — no extra configuration needed.<br><br>
+      <span style="color:#7a5a7a;">The UI, exports, proxy manager and script generator<br>all work normally on Windows without WSL.</span>
+    </div>
+    <button onclick="document.getElementById('winModal').style.display='none'" style="background:transparent;border:1px solid #ff00c8;color:#ff00c8;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:9px 20px;cursor:pointer;border-radius:2px;text-transform:uppercase;">DISMISS</button>
+  </div>
+</div>
+
+
+<!-- Finding detail modal -->
+<div id="findingModal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;">
+  <div style="background:#0d0a10;border:1px solid rgba(255,0,200,0.3);border-radius:4px;padding:28px 32px;max-width:560px;width:90%;position:relative;max-height:80vh;overflow-y:auto;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ff00c8,transparent);"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div class="fc-sev" id="fm-sev" style="font-family:var(--ft);font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:6px;"></div>
+        <div id="fm-title" style="font-family:var(--fm);font-size:14px;letter-spacing:2px;color:#fff;"></div>
+      </div>
+      <button onclick="closeFindingModal()" style="background:transparent;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:0 0 0 16px;">&#10005;</button>
+    </div>
+    <div style="font-family:var(--ft);font-size:10px;color:#c090c0;margin-bottom:6px;letter-spacing:1px;">MODULE</div>
+    <div id="fm-module" style="font-family:var(--ft);font-size:11px;color:var(--cyan);margin-bottom:14px;"></div>
+    <div style="font-family:var(--ft);font-size:10px;color:#c090c0;margin-bottom:6px;letter-spacing:1px;">DETAIL</div>
+    <div id="fm-detail" style="font-family:var(--ft);font-size:11px;color:#e0c8e0;line-height:1.8;margin-bottom:16px;word-break:break-all;"></div>
+    <div style="font-family:var(--ft);font-size:10px;color:#c090c0;margin-bottom:6px;letter-spacing:1px;">ANALYST NOTES</div>
+    <textarea id="fm-notes" placeholder="Add your notes, evidence, remediation thoughts..." style="width:100%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,0,200,0.2);border-radius:2px;color:#fff;font-family:var(--ft);font-size:11px;padding:10px;outline:none;resize:vertical;min-height:80px;line-height:1.7;"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button onclick="saveFindingNote()" style="background:transparent;border:1px solid var(--pink);color:var(--pink);font-family:var(--ft);font-size:10px;letter-spacing:2px;padding:9px 18px;cursor:pointer;border-radius:2px;text-transform:uppercase;">SAVE NOTE</button>
+      <button onclick="markFalsePositive()" style="background:transparent;border:1px solid var(--yellow);color:var(--yellow);font-family:var(--ft);font-size:10px;letter-spacing:2px;padding:9px 18px;cursor:pointer;border-radius:2px;text-transform:uppercase;">MARK FALSE POSITIVE</button>
+      <button onclick="closeFindingModal()" style="background:transparent;border:1px solid var(--border);color:#c090c0;font-family:var(--ft);font-size:10px;letter-spacing:2px;padding:9px 18px;cursor:pointer;border-radius:2px;text-transform:uppercase;margin-left:auto;">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

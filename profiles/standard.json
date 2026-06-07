@@ -1,0 +1,15 @@
+{
+  "id": "standard",
+  "name": "STANDARD",
+  "description": "Balanced speed and coverage — recommended for most scans",
+  "color": "pink",
+  "flags": {
+    "nmap": "-sV -sC -T4 --open",
+    "nuclei": "-rate-limit 150 -timeout 15",
+    "ffuf": "-rate 100 -timeout 10",
+    "masscan": "--rate=5000 --wait=3",
+    "sqlmap": "--level=3 --risk=2 --batch",
+    "hydra": "-w 3 -t 4"
+  },
+  "modules": ["nmap", "nikto", "nuclei", "headers", "ssl", "ffuf", "amass", "whatweb"]
+}

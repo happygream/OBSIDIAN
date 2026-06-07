@@ -1,0 +1,15 @@
+{
+  "id": "stealth",
+  "name": "STEALTH",
+  "description": "Slow, passive — designed to avoid IDS/WAF detection",
+  "color": "cyan",
+  "flags": {
+    "nmap": "-sS -T1 -f --data-length 25 --open",
+    "nuclei": "-rate-limit 5 -timeout 10",
+    "ffuf": "-rate 5 -timeout 10",
+    "masscan": "--rate=100 --wait=5",
+    "sqlmap": "--delay=3 --level=1 --risk=1",
+    "hydra": "-w 5 -t 2"
+  },
+  "modules": ["nmap", "headers", "ssl", "amass", "subfinder", "whatweb"]
+}
