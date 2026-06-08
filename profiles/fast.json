@@ -1,0 +1,12 @@
+{
+  "id": "fast",
+  "name": "FAST",
+  "description": "Quick coverage — nmap, headers, ffuf, whatweb only. Under 5 minutes.",
+  "color": "green",
+  "flags": {
+    "nmap": "-sV -T4 --open --top-ports 1000",
+    "ffuf": "-rate 150 -timeout 8 -ac",
+    "masscan": "--rate=2000"
+  },
+  "modules": ["nmap", "headers", "ffuf", "whatweb"]
+}
